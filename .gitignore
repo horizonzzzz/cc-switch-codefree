@@ -29,4 +29,7 @@ copilot-api
 .history
 CODEBUDDY.md
 .github
+!.github/
+!.github/workflows/
+!.github/workflows/release-codefree-o.yml
 mainWindow.js
