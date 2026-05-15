@@ -124,7 +124,7 @@ pub fn delete_family_session_sqlite(
         return Err(format!("SQLite path does not match expected {provider_name} database"));
     }
 
-    let mut conn = Connection::open(&db_path)
+    let conn = Connection::open(&db_path)
         .map_err(|e| format!("Failed to open {provider_name} database: {e}"))?;
     let tx = conn
         .unchecked_transaction()
