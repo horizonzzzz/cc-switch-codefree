@@ -5,6 +5,10 @@ use serde_json::Value;
 
 use crate::session_manager::{SessionMessage, SessionMeta};
 
+use super::opencode_family::{
+    delete_family_session_sqlite, extract_family_title, load_family_messages_sqlite,
+    parse_family_sqlite_source,
+};
 use super::utils::{parse_timestamp_to_ms, path_basename, truncate_summary};
 
 const PROVIDER_ID: &str = "opencode";
@@ -86,11 +90,7 @@ fn scan_sessions_json() -> Vec<SessionMeta> {
 /// db path itself may contain colons (e.g. `C:\Users\...` on Windows).
 /// This relies on the OpenCode convention that session IDs start with `ses_`.
 fn parse_sqlite_source(source: &str) -> Option<(PathBuf, String)> {
-    let rest = source.strip_prefix("sqlite:")?;
-    let sep = rest.rfind(":ses_")?;
-    let db_path = PathBuf::from(&rest[..sep]);
-    let session_id = rest[sep + 1..].to_string();
-    Some((db_path, session_id))
+    parse_family_sqlite_source(source)
 }
 
 fn scan_sessions_sqlite() -> Vec<SessionMeta> {
@@ -131,11 +131,7 @@ fn scan_sessions_sqlite() -> Vec<SessionMeta> {
     let mut sessions = Vec::new();
     for row in iter.flatten() {
         let (session_id, title, directory, created, updated) = row;
-        let display_title = if title.is_empty() {
-            path_basename(&directory)
-        } else {
-            Some(title)
-        };
+        let display_title = extract_family_title(&title, &directory);
         sessions.push(SessionMeta {
             provider_id: PROVIDER_ID.to_string(),
             session_id: session_id.clone(),
@@ -227,90 +223,7 @@ pub fn load_messages(path: &Path) -> Result<Vec<SessionMessage>, String> {
 /// Load messages from the OpenCode SQLite database for a given source reference.
 /// Joins the `message` and `part` tables in memory to reconstruct full messages.
 pub fn load_messages_sqlite(source: &str) -> Result<Vec<SessionMessage>, String> {
-    let (db_path, session_id) = parse_sqlite_source(source)
-        .ok_or_else(|| format!("Invalid SQLite source reference: {source}"))?;
-
-    let conn = Connection::open_with_flags(
-        &db_path,
-        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
-    )
-    .map_err(|e| format!("Failed to open OpenCode database: {e}"))?;
-
-    let mut msg_stmt = conn
-        .prepare(
-            "SELECT id, time_created, data FROM message WHERE session_id = ?1 ORDER BY time_created ASC",
-        )
-        .map_err(|e| format!("Failed to prepare message query: {e}"))?;
-
-    let msg_rows = msg_stmt
-        .query_map([session_id.as_str()], |row| {
-            let id: String = row.get(0)?;
-            let ts: i64 = row.get(1)?;
-            let data: String = row.get(2)?;
-            Ok((id, ts, data))
-        })
-        .map_err(|e| format!("Failed to query messages: {e}"))?;
-
-    let mut part_stmt = conn
-        .prepare(
-            "SELECT message_id, data FROM part WHERE session_id = ?1 ORDER BY time_created ASC",
-        )
-        .map_err(|e| format!("Failed to prepare part query: {e}"))?;
-
-    let part_rows = part_stmt
-        .query_map([session_id.as_str()], |row| {
-            let message_id: String = row.get(0)?;
-            let data: String = row.get(1)?;
-            Ok((message_id, data))
-        })
-        .map_err(|e| format!("Failed to query parts: {e}"))?;
-
-    let mut parts_map: std::collections::HashMap<String, Vec<String>> =
-        std::collections::HashMap::new();
-    for part in part_rows.flatten() {
-        let (message_id, data) = part;
-        parts_map.entry(message_id).or_default().push(data);
-    }
-
-    let mut messages = Vec::new();
-    for row in msg_rows.flatten() {
-        let (msg_id, ts, data) = row;
-        let msg_value: Value = match serde_json::from_str(&data) {
-            Ok(v) => v,
-            Err(_) => continue,
-        };
-        let role = msg_value
-            .get("role")
-            .and_then(Value::as_str)
-            .unwrap_or("unknown")
-            .to_string();
-
-        let mut texts = Vec::new();
-        if let Some(parts) = parts_map.get(&msg_id) {
-            for part_data in parts {
-                let part_value: Value = match serde_json::from_str(part_data) {
-                    Ok(v) => v,
-                    Err(_) => continue,
-                };
-                if let Some(text) = extract_part_text(&part_value) {
-                    texts.push(text);
-                }
-            }
-        }
-
-        let content = texts.join("\n");
-        if content.trim().is_empty() {
-            continue;
-        }
-
-        messages.push(SessionMessage {
-            role,
-            content,
-            ts: Some(ts),
-        });
-    }
-
-    Ok(messages)
+    load_family_messages_sqlite(source)
 }
 
 pub fn delete_session(storage: &Path, path: &Path, session_id: &str) -> Result<bool, String> {
@@ -380,44 +293,7 @@ pub fn delete_session(storage: &Path, path: &Path, session_id: &str) -> Result<b
 
 /// Delete a session from the OpenCode SQLite database.
 pub fn delete_session_sqlite(session_id: &str, source: &str) -> Result<bool, String> {
-    let (db_path, ref_session_id) = parse_sqlite_source(source)
-        .ok_or_else(|| format!("Invalid SQLite source reference: {source}"))?;
-    let db_path = db_path
-        .canonicalize()
-        .map_err(|e| format!("Failed to canonicalize SQLite database path: {e}"))?;
-    let expected_db_path = get_opencode_db_path()
-        .canonicalize()
-        .map_err(|e| format!("Failed to canonicalize expected OpenCode database path: {e}"))?;
-
-    if ref_session_id != session_id {
-        return Err(format!(
-            "OpenCode SQLite session ID mismatch: expected {session_id}, found {ref_session_id}"
-        ));
-    }
-    if db_path != expected_db_path {
-        return Err("SQLite path does not match expected OpenCode database".to_string());
-    }
-
-    let conn =
-        Connection::open(&db_path).map_err(|e| format!("Failed to open OpenCode database: {e}"))?;
-
-    let tx = conn
-        .unchecked_transaction()
-        .map_err(|e| format!("Failed to begin transaction: {e}"))?;
-
-    tx.execute("DELETE FROM part WHERE session_id = ?1", [session_id])
-        .map_err(|e| format!("Failed to delete OpenCode parts: {e}"))?;
-    tx.execute("DELETE FROM message WHERE session_id = ?1", [session_id])
-        .map_err(|e| format!("Failed to delete OpenCode messages: {e}"))?;
-
-    let deleted = tx
-        .execute("DELETE FROM session WHERE id = ?1", [session_id])
-        .map_err(|e| format!("Failed to delete OpenCode session: {e}"))?;
-
-    tx.commit()
-        .map_err(|e| format!("Failed to commit session deletion: {e}"))?;
-
-    Ok(deleted > 0)
+    delete_family_session_sqlite(session_id, source, &get_opencode_db_path(), "OpenCode")
 }
 
 fn parse_session(storage: &Path, path: &Path) -> Option<SessionMeta> {

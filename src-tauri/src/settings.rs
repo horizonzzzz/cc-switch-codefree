@@ -621,6 +621,17 @@ pub fn get_codefree_o_override_dir() -> Option<PathBuf> {
         .map(|p| resolve_override_path(p))
 }
 
+pub fn get_codefree_o_home_dir() -> PathBuf {
+    if let Some(override_dir) = get_codefree_o_override_dir() {
+        return override_dir
+            .parent()
+            .map(PathBuf::from)
+            .unwrap_or(override_dir);
+    }
+
+    crate::config::get_home_dir().join(".codefree-o")
+}
+
 pub fn get_openclaw_override_dir() -> Option<PathBuf> {
     let settings = settings_store().read().ok()?;
     settings

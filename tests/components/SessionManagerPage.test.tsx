@@ -330,4 +330,52 @@ describe("SessionManagerPage", () => {
     });
     invalidateSpy.mockRestore();
   });
+
+  it("renders codefree-o as an independent provider in Session Manager", async () => {
+    const sessions: SessionMeta[] = [
+      {
+        providerId: "codefree-o",
+        sessionId: "ses_codefree_1",
+        title: "Codefree Session",
+        summary: "Codefree summary",
+        projectDir: "/mock/codefree",
+        createdAt: 5,
+        lastActiveAt: 50,
+        sourcePath: "sqlite:/mock/codefree.db:ses_codefree_1",
+        resumeCommand: "codefree-o --session ses_codefree_1",
+      },
+    ];
+    const messages: Record<string, SessionMessage[]> = {
+      "codefree-o:sqlite:/mock/codefree.db:ses_codefree_1": [
+        { role: "user", content: "codefree hello", ts: 50 },
+      ],
+    };
+    setSessionFixtures(sessions, messages);
+
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({
+            defaultOptions: {
+              queries: { retry: false },
+              mutations: { retry: false },
+            },
+          })
+        }
+      >
+        <SessionManagerPage appId="codefree-o" />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: "Codefree Session" }),
+      ).toBeInTheDocument(),
+    );
+
+    expect(screen.getAllByTitle("codefree-o").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("codefree-o --session ses_codefree_1"),
+    ).toBeInTheDocument();
+  });
 });

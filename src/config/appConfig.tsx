@@ -21,6 +21,7 @@ export const APP_IDS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "codefree-o",
   "openclaw",
   "hermes",
 ];

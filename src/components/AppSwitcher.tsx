@@ -24,6 +24,7 @@ const ALL_APPS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "codefree-o",
   "openclaw",
   "hermes",
 ];

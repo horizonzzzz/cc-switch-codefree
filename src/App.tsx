@@ -122,6 +122,7 @@ const VALID_APPS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "codefree-o",
   "openclaw",
   "hermes",
 ];
@@ -187,6 +188,7 @@ function App() {
     codex: true,
     gemini: true,
     opencode: true,
+    "codefree-o": true,
     openclaw: true,
     hermes: true,
   };
@@ -197,6 +199,7 @@ function App() {
     if (visibleApps.codex) return "codex";
     if (visibleApps.gemini) return "gemini";
     if (visibleApps.opencode) return "opencode";
+    if (visibleApps["codefree-o"]) return "codefree-o";
     if (visibleApps.openclaw) return "openclaw";
     if (visibleApps.hermes) return "hermes";
     return "claude"; // fallback
@@ -215,6 +218,7 @@ function App() {
       sharedFeatureApp !== "claude" &&
       sharedFeatureApp !== "codex" &&
       sharedFeatureApp !== "opencode" &&
+      sharedFeatureApp !== "codefree-o" &&
       sharedFeatureApp !== "openclaw" &&
       sharedFeatureApp !== "gemini" &&
       sharedFeatureApp !== "hermes"
@@ -280,6 +284,7 @@ function App() {
     sharedFeatureApp === "claude" ||
     sharedFeatureApp === "codex" ||
     sharedFeatureApp === "opencode" ||
+    sharedFeatureApp === "codefree-o" ||
     sharedFeatureApp === "openclaw" ||
     sharedFeatureApp === "gemini" ||
     sharedFeatureApp === "hermes";

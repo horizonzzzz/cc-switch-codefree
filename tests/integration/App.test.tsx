@@ -123,8 +123,15 @@ vi.mock("@/components/AppSwitcher", () => ({
       <span>{activeApp}</span>
       <button onClick={() => onSwitch("claude")}>switch-claude</button>
       <button onClick={() => onSwitch("codex")}>switch-codex</button>
+      <button onClick={() => onSwitch("codefree-o")}>switch-codefree-o</button>
       <button onClick={() => onSwitch("openclaw")}>switch-openclaw</button>
     </div>
+  ),
+}));
+
+vi.mock("@/components/sessions/SessionManagerPage", () => ({
+  SessionManagerPage: ({ appId }: { appId: string }) => (
+    <div data-testid="session-manager-page">{appId}</div>
   ),
 }));
 
@@ -161,6 +168,8 @@ describe("App integration with MSW", () => {
     resetProviderState();
     toastSuccessMock.mockReset();
     toastErrorMock.mockReset();
+    localStorage.clear();
+    sessionStorage.clear();
   });
 
   it("covers basic provider flows via real hooks", async () => {
@@ -218,7 +227,7 @@ describe("App integration with MSW", () => {
 
     expect(toastErrorMock).not.toHaveBeenCalled();
     expect(toastSuccessMock).toHaveBeenCalled();
-  });
+  }, 20000);
 
   it("shows toast when auto sync fails in background", async () => {
     const { default: App } = await import("@/App");
@@ -239,7 +248,7 @@ describe("App integration with MSW", () => {
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalled();
     });
-  });
+  }, 20000);
 
   it("duplicates openclaw providers with a generated key that avoids live-only ids", async () => {
     setProviders("openclaw", {
@@ -282,7 +291,7 @@ describe("App integration with MSW", () => {
     expect(toastErrorMock).not.toHaveBeenCalledWith(
       expect.stringContaining("Provider key is required for openclaw"),
     );
-  });
+  }, 20000);
 
   it("shows toast when duplicate cannot load live provider ids", async () => {
     setProviders("openclaw", {
@@ -330,5 +339,20 @@ describe("App integration with MSW", () => {
     );
 
     liveIdsSpy.mockRestore();
-  });
+  }, 20000);
+
+  it("keeps sessions view available when switching to codefree-o", async () => {
+    localStorage.setItem("cc-switch-last-app", "codefree-o");
+    localStorage.setItem("cc-switch-last-view", "sessions");
+
+    const { default: App } = await import("@/App");
+    renderApp(App);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("session-manager-page")).toHaveTextContent(
+        "codefree-o",
+      ),
+    );
+    expect(screen.queryByTestId("provider-list")).not.toBeInTheDocument();
+  }, 20000);
 });

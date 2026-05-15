@@ -719,7 +719,7 @@
   },
   "sessionManager": {
     "title": "Session Manager",
-    "subtitle": "Manage Claude Code, Codex, OpenCode, OpenClaw, Hermes and Gemini CLI sessions",
+    "subtitle": "Manage Claude Code, Codex, OpenCode, codefree-o, OpenClaw, Hermes and Gemini CLI sessions",
     "searchPlaceholder": "Search by content, directory, or ID",
     "searchSessions": "Search sessions",
     "providerFilterAll": "All",
