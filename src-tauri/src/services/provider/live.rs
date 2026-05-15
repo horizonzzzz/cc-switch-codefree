@@ -42,6 +42,7 @@ pub(crate) fn provider_exists_in_live_config(
     match app_type {
         AppType::OpenCode => crate::opencode_config::get_providers()
             .map(|providers| providers.contains_key(provider_id)),
+        AppType::CodefreeO => Ok(false),
         AppType::OpenClaw => crate::openclaw_config::get_providers()
             .map(|providers| providers.contains_key(provider_id)),
         AppType::Hermes => crate::hermes_config::get_providers()
@@ -349,7 +350,11 @@ fn settings_contain_common_config(app_type: &AppType, settings: &Value, snippet:
             }
             _ => false,
         },
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => false,
+        AppType::OpenCode
+        | AppType::CodefreeO
+        | AppType::OpenClaw
+        | AppType::Hermes
+        | AppType::ClaudeDesktop => false,
     }
 }
 
@@ -419,7 +424,11 @@ pub(crate) fn remove_common_config_from_settings(
             }
             Ok(result)
         }
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => {
+        AppType::OpenCode
+        | AppType::CodefreeO
+        | AppType::OpenClaw
+        | AppType::Hermes
+        | AppType::ClaudeDesktop => {
             Ok(settings.clone())
         }
     }
@@ -476,7 +485,11 @@ fn apply_common_config_to_settings(
             }
             Ok(result)
         }
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => {
+        AppType::OpenCode
+        | AppType::CodefreeO
+        | AppType::OpenClaw
+        | AppType::Hermes
+        | AppType::ClaudeDesktop => {
             Ok(settings.clone())
         }
     }
@@ -796,6 +809,11 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
                 }
             }
         }
+        AppType::CodefreeO => {
+            return Err(AppError::Message(
+                "codefree-o is MCP-only and does not support provider live config".to_string(),
+            ));
+        }
         AppType::OpenClaw => {
             // OpenClaw uses additive mode - write provider to config
             use crate::openclaw_config;
@@ -1027,6 +1045,11 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
             let config = read_opencode_config()?;
             Ok(config)
         }
+        AppType::CodefreeO => Err(AppError::localized(
+            "codefree_o.provider_unsupported",
+            "codefree-o 仅支持 MCP，不支持提供商 live 配置读取",
+            "codefree-o is MCP-only and does not support provider live config reads",
+        )),
         AppType::OpenClaw => {
             use crate::openclaw_config::{get_openclaw_config_path, read_openclaw_config};
 
@@ -1145,7 +1168,7 @@ pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool
             })
         }
         // OpenCode, OpenClaw and Hermes use additive mode and are handled by early return above
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes => {
+        AppType::OpenCode | AppType::CodefreeO | AppType::OpenClaw | AppType::Hermes => {
             unreachable!("additive mode apps are handled by early return")
         }
     };

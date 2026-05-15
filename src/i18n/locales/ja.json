@@ -622,6 +622,8 @@
     "geminiConfigDirDescription": "Gemini の設定ディレクトリ（.env）を上書きします。",
     "opencodeConfigDir": "OpenCode 設定ディレクトリ",
     "opencodeConfigDirDescription": "OpenCode の設定ディレクトリ（opencode.json）を上書きします。",
+    "codefreeOConfigDir": "codefree-o 設定ディレクトリ",
+    "codefreeOConfigDirDescription": "codefree-o の設定ディレクトリ（codefree.json）を上書きします。",
     "openclawConfigDir": "OpenClaw 設定ディレクトリ",
     "openclawConfigDirDescription": "OpenClaw の設定ディレクトリ（openclaw.json）を上書きします。",
     "hermesConfigDir": "Hermes 設定ディレクトリ",
@@ -630,6 +632,7 @@
     "browsePlaceholderCodex": "例: /home/<your-username>/.codex",
     "browsePlaceholderGemini": "例: /home/<your-username>/.gemini",
     "browsePlaceholderOpencode": "例: /home/<your-username>/.config/opencode",
+    "browsePlaceholderCodefreeO": "例: /home/<your-username>/.codefree-o/.config",
     "browsePlaceholderOpenclaw": "例: /home/<your-username>/.openclaw",
     "browsePlaceholderHermes": "例: /home/<your-username>/.hermes",
     "browseDirectory": "ディレクトリを選択",
@@ -710,6 +713,7 @@
     "codex": "Codex",
     "gemini": "Gemini",
     "opencode": "OpenCode",
+    "codefreeO": "codefree-o",
     "openclaw": "OpenClaw",
     "hermes": "Hermes"
   },
@@ -1393,6 +1397,7 @@
         "codex": "Codex",
         "gemini": "Gemini",
         "opencode": "OpenCode",
+        "codefreeO": "codefree-o",
         "openclaw": "OpenClaw",
         "hermes": "Hermes"
       }

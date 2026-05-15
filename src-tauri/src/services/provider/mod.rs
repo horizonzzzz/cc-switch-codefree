@@ -1313,6 +1313,7 @@ impl ProviderService {
             if Self::check_live_config_exists(&app_type, id, live_managed)? {
                 match app_type {
                     AppType::OpenCode => remove_opencode_provider_from_live(id)?,
+                    AppType::CodefreeO => {}
                     AppType::OpenClaw => remove_openclaw_provider_from_live(id)?,
                     AppType::Hermes => remove_hermes_provider_from_live(id)?,
                     _ => {}
@@ -1373,6 +1374,11 @@ impl ProviderService {
                 } else {
                     remove_opencode_provider_from_live(id)?;
                 }
+            }
+            AppType::CodefreeO => {
+                return Err(AppError::Message(
+                    "codefree-o does not support provider live config removal".to_string(),
+                ));
             }
             AppType::OpenClaw => {
                 remove_openclaw_provider_from_live(id)?;
@@ -1768,6 +1774,7 @@ impl ProviderService {
             AppType::Codex => Self::extract_codex_common_config(&provider.settings_config),
             AppType::Gemini => Self::extract_gemini_common_config(&provider.settings_config),
             AppType::OpenCode => Self::extract_opencode_common_config(&provider.settings_config),
+            AppType::CodefreeO => Ok(String::new()),
             AppType::OpenClaw => Self::extract_openclaw_common_config(&provider.settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
         }
@@ -1784,6 +1791,7 @@ impl ProviderService {
             AppType::Codex => Self::extract_codex_common_config(settings_config),
             AppType::Gemini => Self::extract_gemini_common_config(settings_config),
             AppType::OpenCode => Self::extract_opencode_common_config(settings_config),
+            AppType::CodefreeO => Ok(String::new()),
             AppType::OpenClaw => Self::extract_openclaw_common_config(settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
         }
@@ -2153,6 +2161,13 @@ impl ProviderService {
                     ));
                 }
             }
+            AppType::CodefreeO => {
+                return Err(AppError::localized(
+                    "provider.codefree_o.unsupported",
+                    "codefree-o 仅支持 MCP，不支持提供商配置",
+                    "codefree-o is MCP-only and does not support provider configuration",
+                ));
+            },
             AppType::OpenClaw => {
                 // OpenClaw uses config structure: { baseUrl, apiKey, api, models }
                 // Basic validation - must be an object
@@ -2356,6 +2371,11 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
+            AppType::CodefreeO => Err(AppError::localized(
+                "provider.codefree_o.unsupported",
+                "codefree-o 仅支持 MCP，不支持提供商凭证提取",
+                "codefree-o is MCP-only and does not support provider credential extraction",
+            )),
             AppType::OpenClaw | AppType::Hermes => {
                 // OpenClaw/Hermes use apiKey and baseUrl directly on the object
                 let api_key = provider

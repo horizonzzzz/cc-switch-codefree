@@ -88,6 +88,7 @@ pub fn import_from_gemini(config: &mut MultiAppConfig) -> Result<usize, AppError
                         codex: false,
                         gemini: true,
                         opencode: false,
+                        codefree_o: false,
                         hermes: false,
                     },
                     description: None,

@@ -390,6 +390,10 @@ type = "stdio"
       claude: true,
       codex: false,
       gemini: false,
+      opencode: false,
+      "codefree-o": false,
+      openclaw: false,
+      hermes: false,
     });
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(onSave).toHaveBeenCalledWith();
@@ -433,11 +437,40 @@ type = "stdio"
       codex: false,
       gemini: false,
       opencode: false,
+      "codefree-o": false,
       openclaw: false,
       hermes: false,
     });
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(toastErrorMock).not.toHaveBeenCalled();
+  });
+
+  it("renders codefree-o checkbox in enabled apps", async () => {
+    renderForm();
+
+    await waitFor(() =>
+      expect(
+        screen.getByLabelText("mcp.unifiedPanel.apps.codefreeO"),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it("includes codefree-o in enabled apps when checked", async () => {
+    renderForm();
+
+    fireEvent.click(screen.getByText("mcp.form.additionalInfo"));
+    fireEvent.change(screen.getByPlaceholderText("mcp.form.titlePlaceholder"), {
+      target: { value: "codefree-o-server" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("mcp.form.jsonPlaceholder"), {
+      target: { value: '{"type":"stdio","command":"run"}' },
+    });
+    fireEvent.click(screen.getByLabelText("mcp.unifiedPanel.apps.codefreeO"));
+    fireEvent.click(screen.getByText("common.add"));
+
+    await waitFor(() => expect(upsertMock).toHaveBeenCalledTimes(1));
+    const [entry] = upsertMock.mock.calls.at(-1) ?? [];
+    expect(entry.apps["codefree-o"]).toBe(true);
   });
 
   it("保存失败时展示翻译后的错误并恢复按钮", async () => {

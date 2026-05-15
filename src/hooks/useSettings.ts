@@ -113,6 +113,7 @@ export function useSettings(): UseSettingsResult {
       codex: sanitizeDir(data?.codexConfigDir),
       gemini: sanitizeDir(data?.geminiConfigDir),
       opencode: sanitizeDir(data?.opencodeConfigDir),
+      "codefree-o": sanitizeDir(data?.codefreeOConfigDir),
       openclaw: sanitizeDir(data?.openclawConfigDir),
       hermes: sanitizeDir(data?.hermesConfigDir),
     });
@@ -192,6 +193,9 @@ export function useSettings(): UseSettingsResult {
         const sanitizedOpencodeDir = sanitizeDir(
           mergedSettings.opencodeConfigDir,
         );
+        const sanitizedCodefreeODir = sanitizeDir(
+          mergedSettings.codefreeOConfigDir,
+        );
         const sanitizedOpenclawDir = sanitizeDir(
           mergedSettings.openclawConfigDir,
         );
@@ -204,6 +208,7 @@ export function useSettings(): UseSettingsResult {
           codexConfigDir: sanitizedCodexDir,
           geminiConfigDir: sanitizedGeminiDir,
           opencodeConfigDir: sanitizedOpencodeDir,
+          codefreeOConfigDir: sanitizedCodefreeODir,
           openclawConfigDir: sanitizedOpenclawDir,
           language: mergedSettings.language,
         };
@@ -320,6 +325,9 @@ export function useSettings(): UseSettingsResult {
         const sanitizedOpencodeDir = sanitizeDir(
           mergedSettings.opencodeConfigDir,
         );
+        const sanitizedCodefreeODir = sanitizeDir(
+          mergedSettings.codefreeOConfigDir,
+        );
         const sanitizedOpenclawDir = sanitizeDir(
           mergedSettings.openclawConfigDir,
         );
@@ -328,6 +336,7 @@ export function useSettings(): UseSettingsResult {
         const previousCodexDir = sanitizeDir(data?.codexConfigDir);
         const previousGeminiDir = sanitizeDir(data?.geminiConfigDir);
         const previousOpencodeDir = sanitizeDir(data?.opencodeConfigDir);
+        const previousCodefreeODir = sanitizeDir(data?.codefreeOConfigDir);
         const previousOpenclawDir = sanitizeDir(data?.openclawConfigDir);
         const { webdavSync: _ignoredWebdavSync, ...restSettings } =
           mergedSettings;
@@ -338,6 +347,7 @@ export function useSettings(): UseSettingsResult {
           codexConfigDir: sanitizedCodexDir,
           geminiConfigDir: sanitizedGeminiDir,
           opencodeConfigDir: sanitizedOpencodeDir,
+          codefreeOConfigDir: sanitizedCodefreeODir,
           openclawConfigDir: sanitizedOpenclawDir,
           language: mergedSettings.language,
         };
@@ -427,6 +437,8 @@ export function useSettings(): UseSettingsResult {
         const codexDirChanged = sanitizedCodexDir !== previousCodexDir;
         const geminiDirChanged = sanitizedGeminiDir !== previousGeminiDir;
         const opencodeDirChanged = sanitizedOpencodeDir !== previousOpencodeDir;
+        const codefreeODirChanged =
+          sanitizedCodefreeODir !== previousCodefreeODir;
         const openclawDirChanged = sanitizedOpenclawDir !== previousOpenclawDir;
         if (
           !pluginSynced &&
@@ -434,6 +446,7 @@ export function useSettings(): UseSettingsResult {
             codexDirChanged ||
             geminiDirChanged ||
             opencodeDirChanged ||
+            codefreeODirChanged ||
             openclawDirChanged)
         ) {
           const syncResult = await syncCurrentProvidersLiveSafe();

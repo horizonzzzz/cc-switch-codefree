@@ -465,4 +465,12 @@ describe("SettingsPage Component", () => {
     fireEvent.click(screen.getByText("change-app-config"));
     expect(settingsMock.updateAppConfigDir).toHaveBeenCalledWith("/app/new");
   });
+
+  it("shows codefree-o in app visibility settings", async () => {
+    renderSettingsPage();
+
+    await waitFor(() =>
+      expect(screen.getByText("apps.codefreeO")).toBeInTheDocument(),
+    );
+  });
 });

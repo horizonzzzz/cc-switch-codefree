@@ -622,6 +622,8 @@
     "geminiConfigDirDescription": "Override Gemini configuration directory (.env).",
     "opencodeConfigDir": "OpenCode Configuration Directory",
     "opencodeConfigDirDescription": "Override OpenCode configuration directory (opencode.json).",
+    "codefreeOConfigDir": "codefree-o Configuration Directory",
+    "codefreeOConfigDirDescription": "Override codefree-o configuration directory (codefree.json).",
     "openclawConfigDir": "OpenClaw Configuration Directory",
     "openclawConfigDirDescription": "Override OpenClaw configuration directory (openclaw.json).",
     "hermesConfigDir": "Hermes Configuration Directory",
@@ -630,6 +632,7 @@
     "browsePlaceholderCodex": "e.g., /home/<your-username>/.codex",
     "browsePlaceholderGemini": "e.g., /home/<your-username>/.gemini",
     "browsePlaceholderOpencode": "e.g., /home/<your-username>/.config/opencode",
+    "browsePlaceholderCodefreeO": "e.g., /home/<your-username>/.codefree-o/.config",
     "browsePlaceholderOpenclaw": "e.g., /home/<your-username>/.openclaw",
     "browsePlaceholderHermes": "e.g., /home/<your-username>/.hermes",
     "browseDirectory": "Browse Directory",
@@ -710,6 +713,7 @@
     "codex": "Codex",
     "gemini": "Gemini",
     "opencode": "OpenCode",
+    "codefreeO": "codefree-o",
     "openclaw": "OpenClaw",
     "hermes": "Hermes"
   },
@@ -1393,6 +1397,7 @@
         "codex": "Codex",
         "gemini": "Gemini",
         "opencode": "OpenCode",
+        "codefreeO": "codefree-o",
         "openclaw": "OpenClaw",
         "hermes": "Hermes"
       }

@@ -227,6 +227,7 @@ command = "echo"
                 codex: true,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -321,6 +322,7 @@ fn set_mcp_enabled_for_codex_writes_live_config() {
                 codex: false, // 初始未启用
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -356,6 +358,49 @@ fn set_mcp_enabled_for_codex_writes_live_config() {
 }
 
 #[test]
+fn set_mcp_enabled_for_codefree_o_writes_live_config() {
+    let _guard = test_mutex().lock().expect("acquire test mutex");
+    reset_test_fs();
+    let home = ensure_test_home();
+
+    let codefree_dir = home.join(".codefree-o").join(".config");
+    std::fs::create_dir_all(&codefree_dir).expect("create codefree-o dir");
+
+    let state = create_test_state().expect("create test state");
+    state
+        .db
+        .save_mcp_server(&McpServer {
+            id: "echo".into(),
+            name: "echo".into(),
+            server: json!({
+                "type": "stdio",
+                "command": "echo"
+            }),
+            apps: McpApps {
+                claude: false,
+                codex: false,
+                gemini: false,
+                opencode: false,
+                codefree_o: false,
+                hermes: false,
+            },
+            description: None,
+            homepage: None,
+            docs: None,
+            tags: Vec::new(),
+        })
+        .expect("seed mcp server");
+
+    McpService::set_enabled(&state, AppType::CodefreeO, "echo", true)
+        .expect("enable codefree-o mcp");
+
+    let text =
+        std::fs::read_to_string(codefree_dir.join("codefree.json")).expect("read codefree.json");
+    let value: serde_json::Value = json5::from_str(&text).expect("parse codefree.json");
+    assert!(value.pointer("/mcp/echo").is_some());
+}
+
+#[test]
 fn enabling_codex_mcp_skips_when_codex_dir_missing() {
     use support::create_test_state;
 
@@ -386,6 +431,7 @@ fn enabling_codex_mcp_skips_when_codex_dir_missing() {
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -431,6 +477,7 @@ fn upsert_mcp_server_disabling_app_removes_from_claude_live_config() {
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -465,6 +512,7 @@ fn upsert_mcp_server_disabling_app_removes_from_claude_live_config() {
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -598,6 +646,7 @@ fn enabling_gemini_mcp_skips_when_gemini_dir_missing() {
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -653,6 +702,7 @@ fn enabling_claude_mcp_skips_when_claude_config_absent() {
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -714,6 +764,7 @@ fn sync_all_enabled_removes_known_disabled_but_preserves_unknown_live_entries() 
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -736,6 +787,7 @@ fn sync_all_enabled_removes_known_disabled_but_preserves_unknown_live_entries() 
                 codex: false,
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,
@@ -766,4 +818,57 @@ fn sync_all_enabled_removes_known_disabled_but_preserves_unknown_live_entries() 
         servers.contains_key("external-only"),
         "live entries unknown to DB should be preserved"
     );
+}
+
+#[test]
+fn disabling_codefree_o_mcp_removes_only_codefree_o_entry() {
+    let _guard = test_mutex().lock().expect("acquire test mutex");
+    reset_test_fs();
+    let home = ensure_test_home();
+
+    let codefree_dir = home.join(".codefree-o").join(".config");
+    let opencode_dir = home.join(".config").join("opencode");
+    std::fs::create_dir_all(&codefree_dir).expect("create codefree-o dir");
+    std::fs::create_dir_all(&opencode_dir).expect("create opencode dir");
+
+    let state = create_test_state().expect("create test state");
+    state
+        .db
+        .save_mcp_server(&McpServer {
+            id: "echo".into(),
+            name: "echo".into(),
+            server: json!({
+                "type": "stdio",
+                "command": "echo"
+            }),
+            apps: McpApps {
+                claude: false,
+                codex: false,
+                gemini: false,
+                opencode: true,
+                codefree_o: true,
+                hermes: false,
+            },
+            description: None,
+            homepage: None,
+            docs: None,
+            tags: Vec::new(),
+        })
+        .expect("seed mcp server");
+
+    McpService::sync_all_enabled(&state).expect("sync enabled");
+    McpService::set_enabled(&state, AppType::CodefreeO, "echo", false)
+        .expect("disable codefree-o");
+
+    let codefree_text =
+        std::fs::read_to_string(codefree_dir.join("codefree.json")).expect("read codefree.json");
+    let codefree_value: serde_json::Value =
+        json5::from_str(&codefree_text).expect("parse codefree.json");
+    assert!(codefree_value.pointer("/mcp/echo").is_none());
+
+    let opencode_text =
+        std::fs::read_to_string(opencode_dir.join("opencode.json")).expect("read opencode.json");
+    let opencode_value: serde_json::Value =
+        json5::from_str(&opencode_text).expect("parse opencode.json");
+    assert!(opencode_value.pointer("/mcp/echo").is_some());
 }

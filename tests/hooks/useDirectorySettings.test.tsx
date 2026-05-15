@@ -69,6 +69,7 @@ describe("useDirectorySettings", () => {
       if (app === "codex") return "/remote/codex";
       if (app === "gemini") return "/remote/gemini";
       if (app === "opencode") return "/remote/opencode";
+      if (app === "codefree-o") return "/remote/codefree-o";
       if (app === "openclaw") return "/remote/openclaw";
       return "/remote/hermes";
     });
@@ -91,6 +92,7 @@ describe("useDirectorySettings", () => {
       codex: "/remote/codex",
       gemini: "/remote/gemini",
       opencode: "/remote/opencode",
+      "codefree-o": "/remote/codefree-o",
       openclaw: "/remote/openclaw",
       hermes: "/remote/hermes",
     });
@@ -236,6 +238,31 @@ describe("useDirectorySettings", () => {
       openclawConfigDir: "/picked/openclaw",
     });
     expect(result.current.resolvedDirs.openclaw).toBe("/picked/openclaw");
+  });
+
+  it("updates codefree-o directory when browsing succeeds", async () => {
+    selectConfigDirectoryMock.mockResolvedValue("/picked/codefree-o");
+
+    const { result } = renderHook(() =>
+      useDirectorySettings({
+        settings: createSettings({ codefreeOConfigDir: undefined }),
+        onUpdateSettings,
+      }),
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.browseDirectory("codefree-o");
+    });
+
+    expect(selectConfigDirectoryMock).toHaveBeenCalledWith("/remote/codefree-o");
+    expect(onUpdateSettings).toHaveBeenCalledWith({
+      codefreeOConfigDir: "/picked/codefree-o",
+    });
+    expect(result.current.resolvedDirs["codefree-o"]).toBe(
+      "/picked/codefree-o",
+    );
   });
 
   it("resetAllDirectories applies provided resolved values", async () => {

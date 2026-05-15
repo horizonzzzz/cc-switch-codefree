@@ -207,6 +207,7 @@ command = "say"
                 codex: true, // 启用 Codex
                 gemini: false,
                 opencode: false,
+                codefree_o: false,
                 hermes: false,
             },
             description: None,

@@ -622,6 +622,8 @@
     "geminiConfigDirDescription": "覆盖 Gemini 配置目录 (.env)。",
     "opencodeConfigDir": "OpenCode 配置目录",
     "opencodeConfigDirDescription": "覆盖 OpenCode 配置目录 (opencode.json)。",
+    "codefreeOConfigDir": "codefree-o 配置目录",
+    "codefreeOConfigDirDescription": "覆盖 codefree-o 配置目录 (codefree.json)。",
     "openclawConfigDir": "OpenClaw 配置目录",
     "openclawConfigDirDescription": "覆盖 OpenClaw 配置目录 (openclaw.json)。",
     "hermesConfigDir": "Hermes 配置目录",
@@ -630,6 +632,7 @@
     "browsePlaceholderCodex": "例如：/home/<你的用户名>/.codex",
     "browsePlaceholderGemini": "例如：/home/<你的用户名>/.gemini",
     "browsePlaceholderOpencode": "例如：/home/<你的用户名>/.config/opencode",
+    "browsePlaceholderCodefreeO": "例如：/home/<你的用户名>/.codefree-o/.config",
     "browsePlaceholderOpenclaw": "例如：/home/<你的用户名>/.openclaw",
     "browsePlaceholderHermes": "例如：/home/<你的用户名>/.hermes",
     "browseDirectory": "浏览目录",
@@ -710,6 +713,7 @@
     "codex": "Codex",
     "gemini": "Gemini",
     "opencode": "OpenCode",
+    "codefreeO": "codefree-o",
     "openclaw": "OpenClaw",
     "hermes": "Hermes"
   },
@@ -1393,6 +1397,7 @@
         "codex": "Codex",
         "gemini": "Gemini",
         "opencode": "OpenCode",
+        "codefreeO": "codefree-o",
         "openclaw": "OpenClaw",
         "hermes": "Hermes"
       }

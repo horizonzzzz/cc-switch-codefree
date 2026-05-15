@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use cc_switch_lib::{AppError, MultiAppConfig};
+use cc_switch_lib::{AppError, AppSettings, MultiAppConfig};
 
 mod support;
 use support::{ensure_test_home, reset_test_fs, test_mutex};
@@ -104,4 +104,25 @@ fn load_valid_v2_config_succeeds() {
         .get_manager(&cc_switch_lib::AppType::Claude)
         .is_some());
     assert!(loaded.get_manager(&cc_switch_lib::AppType::Codex).is_some());
+}
+
+#[test]
+fn load_valid_v2_config_preserves_codefree_o_settings_field() {
+    let _guard = test_mutex().lock().expect("acquire test mutex");
+    reset_test_fs();
+    let _home = ensure_test_home();
+    let path = cfg_path();
+    fs::create_dir_all(path.parent().unwrap()).expect("create cfg dir");
+
+    let mut settings = AppSettings::default();
+    settings.codefree_o_config_dir = Some("/custom/codefree-o".into());
+    let json = serde_json::to_string_pretty(&settings).expect("serialize settings");
+    fs::write(path.parent().unwrap().join("settings.json"), json).expect("write settings");
+
+    cc_switch_lib::reload_settings().expect("reload settings from file");
+    let loaded = cc_switch_lib::get_settings();
+    assert_eq!(
+        loaded.codefree_o_config_dir.as_deref(),
+        Some("/custom/codefree-o")
+    );
 }

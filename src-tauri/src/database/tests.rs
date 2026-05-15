@@ -89,7 +89,8 @@ const V3_8_SCHEMA_V1_SQL: &str = r#"
         tags TEXT NOT NULL DEFAULT '[]',
         enabled_claude BOOLEAN NOT NULL DEFAULT 0,
         enabled_codex BOOLEAN NOT NULL DEFAULT 0,
-        enabled_gemini BOOLEAN NOT NULL DEFAULT 0
+        enabled_gemini BOOLEAN NOT NULL DEFAULT 0,
+        enabled_codefree_o BOOLEAN NOT NULL DEFAULT 0
     );
     CREATE TABLE prompts (
         id TEXT NOT NULL,
@@ -199,6 +200,7 @@ fn schema_migration_adds_missing_columns_for_providers() {
         ("providers", "is_current"),
         ("provider_endpoints", "added_at"),
         ("mcp_servers", "enabled_gemini"),
+        ("mcp_servers", "enabled_codefree_o"),
         ("prompts", "updated_at"),
         ("skills", "installed_at"),
         ("skill_repos", "enabled"),
@@ -313,7 +315,8 @@ fn schema_migration_v4_adds_pricing_model_columns() {
             enabled_claude INTEGER NOT NULL DEFAULT 0,
             enabled_codex INTEGER NOT NULL DEFAULT 0,
             enabled_gemini INTEGER NOT NULL DEFAULT 0,
-            enabled_opencode INTEGER NOT NULL DEFAULT 0
+            enabled_opencode INTEGER NOT NULL DEFAULT 0,
+            enabled_codefree_o INTEGER NOT NULL DEFAULT 0
         );
         "#,
     )

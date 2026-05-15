@@ -66,17 +66,27 @@ const McpFormModal: React.FC<McpFormModalProps> = ({
     codex: boolean;
     gemini: boolean;
     opencode: boolean;
+    codefreeO: boolean;
     openclaw: boolean;
     hermes: boolean;
   }>(() => {
     if (initialData?.apps) {
-      return { ...initialData.apps };
+      return {
+        claude: initialData.apps.claude === true,
+        codex: initialData.apps.codex === true,
+        gemini: initialData.apps.gemini === true,
+        opencode: initialData.apps.opencode === true,
+        codefreeO: initialData.apps["codefree-o"] === true,
+        openclaw: initialData.apps.openclaw === true,
+        hermes: initialData.apps.hermes === true,
+      };
     }
     return {
       claude: defaultEnabledApps.includes("claude"),
       codex: defaultEnabledApps.includes("codex"),
       gemini: defaultEnabledApps.includes("gemini"),
       opencode: defaultEnabledApps.includes("opencode"),
+      codefreeO: defaultEnabledApps.includes("codefree-o"),
       openclaw: defaultEnabledApps.includes("openclaw"),
       hermes: defaultEnabledApps.includes("hermes"),
     };
@@ -362,7 +372,15 @@ const McpFormModal: React.FC<McpFormModalProps> = ({
         id: trimmedId,
         name: finalName,
         server: serverSpec,
-        apps: enabledApps,
+        apps: {
+          claude: enabledApps.claude,
+          codex: enabledApps.codex,
+          gemini: enabledApps.gemini,
+          opencode: enabledApps.opencode,
+          "codefree-o": enabledApps.codefreeO,
+          openclaw: enabledApps.openclaw,
+          hermes: enabledApps.hermes,
+        },
       };
 
       const descriptionTrimmed = formDescription.trim();
@@ -579,6 +597,22 @@ const McpFormModal: React.FC<McpFormModalProps> = ({
                     className="text-sm text-foreground cursor-pointer select-none"
                   >
                     {t("mcp.unifiedPanel.apps.opencode")}
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="enable-codefree-o"
+                    checked={enabledApps.codefreeO}
+                    onCheckedChange={(checked: boolean) =>
+                      setEnabledApps({ ...enabledApps, codefreeO: checked })
+                    }
+                  />
+                  <label
+                    htmlFor="enable-codefree-o"
+                    className="text-sm text-foreground cursor-pointer select-none"
+                  >
+                    {t("mcp.unifiedPanel.apps.codefreeO")}
                   </label>
                 </div>
 

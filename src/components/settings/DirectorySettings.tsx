@@ -18,6 +18,7 @@ interface DirectorySettingsProps {
   codexDir?: string;
   geminiDir?: string;
   opencodeDir?: string;
+  codefreeODir?: string;
   openclawDir?: string;
   hermesDir?: string;
   onDirectoryChange: (app: DirectoryAppId, value?: string) => void;
@@ -35,6 +36,7 @@ export function DirectorySettings({
   codexDir,
   geminiDir,
   opencodeDir,
+  codefreeODir,
   openclawDir,
   hermesDir,
   onDirectoryChange,
@@ -135,6 +137,17 @@ export function DirectorySettings({
           onChange={(val) => onDirectoryChange("opencode", val)}
           onBrowse={() => onBrowseDirectory("opencode")}
           onReset={() => onResetDirectory("opencode")}
+        />
+
+        <DirectoryInput
+          label={t("settings.codefreeOConfigDir")}
+          description={undefined}
+          value={codefreeODir}
+          resolvedValue={resolvedDirs["codefree-o"]}
+          placeholder={t("settings.browsePlaceholderCodefreeO")}
+          onChange={(val) => onDirectoryChange("codefree-o", val)}
+          onBrowse={() => onBrowseDirectory("codefree-o")}
+          onReset={() => onResetDirectory("codefree-o")}
         />
 
         <DirectoryInput

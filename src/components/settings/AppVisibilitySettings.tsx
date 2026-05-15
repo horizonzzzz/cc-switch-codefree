@@ -25,6 +25,7 @@ const APP_CONFIG: Array<{
   { id: "codex", icon: "openai", nameKey: "apps.codex" },
   { id: "gemini", icon: "gemini", nameKey: "apps.gemini" },
   { id: "opencode", icon: "opencode", nameKey: "apps.opencode" },
+  { id: "codefree-o", icon: "opencode", nameKey: "apps.codefreeO" },
   { id: "openclaw", icon: "openclaw", nameKey: "apps.openclaw" },
   { id: "hermes", icon: "hermes", nameKey: "apps.hermes" },
 ];
@@ -41,6 +42,7 @@ export function AppVisibilitySettings({
     codex: true,
     gemini: true,
     opencode: true,
+    "codefree-o": false,
     openclaw: true,
     hermes: true,
   };
@@ -73,7 +75,7 @@ export function AppVisibilitySettings({
       </header>
       <div className="inline-flex gap-1 rounded-md border border-border-default bg-background p-1">
         {APP_CONFIG.map((app) => {
-          const isVisible = visibleApps[app.id];
+          const isVisible = visibleApps[app.id] === true;
           // Disable button if this is the last visible app
           const isDisabled = isVisible && visibleCount <= 1;
 

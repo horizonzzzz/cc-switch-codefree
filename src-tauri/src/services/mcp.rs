@@ -40,6 +40,9 @@ impl McpService {
         if prev_apps.opencode && !server.apps.opencode {
             Self::remove_server_from_app(state, &server.id, &AppType::OpenCode)?;
         }
+        if prev_apps.codefree_o && !server.apps.codefree_o {
+            Self::remove_server_from_app(state, &server.id, &AppType::CodefreeO)?;
+        }
         if prev_apps.hermes && !server.apps.hermes {
             Self::remove_server_from_app(state, &server.id, &AppType::Hermes)?;
         }
@@ -129,6 +132,13 @@ impl McpService {
                     &server.server,
                 )?;
             }
+            AppType::CodefreeO => {
+                mcp::sync_single_server_to_codefree_o(
+                    &Default::default(),
+                    &server.id,
+                    &server.server,
+                )?;
+            }
             AppType::OpenClaw => {
                 // OpenClaw MCP support is still in development (Issue #4834)
                 // Skip for now
@@ -164,6 +174,9 @@ impl McpService {
             AppType::Gemini => mcp::remove_server_from_gemini(id)?,
             AppType::OpenCode => {
                 mcp::remove_server_from_opencode(id)?;
+            }
+            AppType::CodefreeO => {
+                mcp::remove_server_from_codefree_o(id)?;
             }
             AppType::OpenClaw => {
                 // OpenClaw MCP support is still in development

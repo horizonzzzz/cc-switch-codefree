@@ -12,6 +12,7 @@
 //! - `hermes` - Hermes MCP 同步和导入
 
 mod claude;
+mod codefree_o;
 mod codex;
 mod gemini;
 mod hermes;
@@ -23,6 +24,7 @@ pub use claude::{
     import_from_claude, remove_server_from_claude, sync_enabled_to_claude,
     sync_single_server_to_claude,
 };
+pub use codefree_o::{remove_server_from_codefree_o, sync_single_server_to_codefree_o};
 pub use codex::{
     import_from_codex, remove_server_from_codex, sync_enabled_to_codex, sync_single_server_to_codex,
 };

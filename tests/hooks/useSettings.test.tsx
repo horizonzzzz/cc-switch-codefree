@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useSettings } from "@/hooks/useSettings";
 import type { Settings } from "@/types";
@@ -303,6 +303,33 @@ describe("useSettings hook", () => {
     expect(toastErrorMock).not.toHaveBeenCalled();
     // 插件同步已包含 syncCurrentProvidersLiveSafe，目录变更不再重复调用
     expect(syncCurrentProvidersLiveMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("sanitizes codefree-o config dir from server settings", async () => {
+    serverSettings = {
+      ...serverSettings,
+      codefreeOConfigDir: "  /server/codefree-o  ",
+    };
+    useSettingsQueryMock.mockReturnValue({
+      data: serverSettings,
+      isLoading: false,
+    });
+
+    settingsFormMock = createSettingsFormMock({
+      settings: {
+        ...serverSettings,
+        codefreeOConfigDir: "/server/codefree-o",
+        language: "zh",
+      },
+    });
+
+    const { result } = renderHook(() => useSettings());
+
+    await waitFor(() => expect(result.current.settings).not.toBeNull());
+
+    expect(result.current.settings?.codefreeOConfigDir).toBe(
+      "/server/codefree-o",
+    );
   });
 
   it("saves settings without restart when directory unchanged", async () => {

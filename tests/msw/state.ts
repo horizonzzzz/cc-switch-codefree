@@ -66,6 +66,7 @@ const createDefaultProviders = (): ProvidersByApp => ({
     },
   },
   opencode: {},
+  "codefree-o": {},
   openclaw: {},
   hermes: {},
 });
@@ -76,6 +77,7 @@ const createDefaultCurrent = (): CurrentProviderState => ({
   codex: "codex-1",
   gemini: "gemini-1",
   opencode: "",
+  "codefree-o": "",
   openclaw: "",
   hermes: "",
 });
@@ -188,6 +190,7 @@ let mcpConfigs: McpConfigState = {
   },
   gemini: {},
   opencode: {},
+  "codefree-o": {},
   openclaw: {},
   hermes: {},
 };
@@ -256,6 +259,7 @@ export const resetProviderState = () => {
     },
     gemini: {},
     opencode: {},
+    "codefree-o": {},
     openclaw: {},
     hermes: {},
   };

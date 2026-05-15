@@ -208,6 +208,14 @@ impl StreamCheckService {
         // OpenCode / OpenClaw 的 settings_config 结构与 Claude/Codex/Gemini 不同
         // （baseUrl / apiKey 直接作为根字段而非嵌套在 env），并且协议由 `api`
         // 或 `npm` 字段显式指定。它们不走 get_adapter 路径，而是直接分发。
+        if matches!(app_type, AppType::CodefreeO) {
+            return Err(AppError::localized(
+                "stream_check.codefree_o_unsupported",
+                "codefree-o 仅支持 MCP，不支持连通性检测",
+                "codefree-o is MCP-only and does not support stream checks",
+            ));
+        }
+
         if matches!(
             app_type,
             AppType::OpenCode | AppType::OpenClaw | AppType::Hermes
@@ -278,6 +286,13 @@ impl StreamCheckService {
                 )
                 .await
             }
+            AppType::CodefreeO => {
+                return Err(AppError::localized(
+                    "stream_check.codefree_o_unsupported",
+                    "codefree-o 仅支持 MCP，不支持连通性检测",
+                    "codefree-o is MCP-only and does not support stream checks",
+                ));
+            },
             AppType::OpenCode | AppType::OpenClaw | AppType::Hermes => {
                 // Already handled via early dispatch above
                 unreachable!("OpenCode/OpenClaw/Hermes 已通过 check_once_without_adapter 处理")
@@ -1377,7 +1392,7 @@ impl StreamCheckService {
             }
             AppType::Gemini => Self::extract_env_model(provider, "GEMINI_MODEL")
                 .unwrap_or_else(|| config.gemini_model.clone()),
-            AppType::OpenCode => {
+            AppType::OpenCode | AppType::CodefreeO => {
                 // OpenCode uses models map in settings_config
                 // Try to extract first model from the models object
                 Self::extract_opencode_model(provider).unwrap_or_else(|| "gpt-4o".to_string())
