@@ -61,6 +61,8 @@ jobs:
             artifact_name: windows
           - os: ubuntu-22.04
             artifact_name: linux
+          - os: macos-14
+            artifact_name: macos
 
     steps:
       - name: Checkout
@@ -73,6 +75,11 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Add macOS targets
+        if: runner.os == 'macOS'
+        run: |
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Install Linux system deps
         if: runner.os == 'Linux'
@@ -176,6 +183,10 @@ jobs:
         if: runner.os == 'Linux'
         run: pnpm tauri build --bundles appimage,deb,rpm
 
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: pnpm tauri build --target universal-apple-darwin
+
       - name: Collect Windows artifacts
         if: runner.os == 'Windows'
         shell: pwsh
@@ -248,6 +259,66 @@ jobs:
             cp "$RPM" "release-assets/CC-Switch-${TAG}-Linux-x86_64.rpm"
           fi
 
+      - name: Collect macOS artifacts
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-assets
+          TAG="${GITHUB_REF_NAME}"
+
+          APP_PATH=""
+          TAR_GZ=""
+
+          for path in \
+            "src-tauri/target/universal-apple-darwin/release/bundle/macos" \
+            "src-tauri/target/aarch64-apple-darwin/release/bundle/macos" \
+            "src-tauri/target/x86_64-apple-darwin/release/bundle/macos" \
+            "src-tauri/target/release/bundle/macos"; do
+            if [ -d "$path" ]; then
+              [ -z "$APP_PATH" ] && APP_PATH=$(find "$path" -maxdepth 1 -name "*.app" -type d | head -1 || true)
+              [ -z "$TAR_GZ" ] && TAR_GZ=$(find "$path" -maxdepth 1 -name "*.tar.gz" -type f | head -1 || true)
+            fi
+          done
+
+          if [ -z "$APP_PATH" ]; then
+            echo "No macOS .app bundle found" >&2
+            exit 1
+          fi
+          if [ -z "$TAR_GZ" ]; then
+            echo "No macOS .tar.gz updater artifact found" >&2
+            exit 1
+          fi
+
+          NEW_TAR_GZ="CC-Switch-${TAG}-macOS.tar.gz"
+          cp "$TAR_GZ" "release-assets/$NEW_TAR_GZ"
+          [ -f "$TAR_GZ.sig" ] && cp "$TAR_GZ.sig" "release-assets/$NEW_TAR_GZ.sig" || echo "No macOS signature found for updater artifact"
+
+          NEW_ZIP="CC-Switch-${TAG}-macOS.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "release-assets/$NEW_ZIP"
+
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install create-dmg
+          NEW_DMG="CC-Switch-${TAG}-macOS.dmg"
+          DMG_STAGE_DIR="$RUNNER_TEMP/dmg-stage"
+          rm -rf "$DMG_STAGE_DIR"
+          mkdir -p "$DMG_STAGE_DIR"
+          ditto "$APP_PATH" "$DMG_STAGE_DIR/CC Switch.app"
+
+          create-dmg \
+            --volname "CC Switch" \
+            --background "src-tauri/icons/dmg-background.png" \
+            --window-size 660 400 \
+            --window-pos 200 120 \
+            --icon-size 80 \
+            --icon "CC Switch.app" 180 220 \
+            --hide-extension "CC Switch.app" \
+            --app-drop-link 480 220 \
+            --no-internet-enable \
+            "release-assets/$NEW_DMG" \
+            "$DMG_STAGE_DIR"
+
+          rm -rf "$DMG_STAGE_DIR"
+
       - name: Upload release artifacts to workflow
         uses: actions/upload-artifact@v4
         with:
@@ -283,14 +354,17 @@ jobs:
           body: |
             ## CC Switch Codefree-O ${{ github.ref_name }}
 
-            Internal fork release for Windows and Linux.
+            Internal fork release for Windows, macOS, and Linux.
 
             ### Downloads
 
+            - **macOS**: `CC-Switch-${{ github.ref_name }}-macOS.dmg` or `CC-Switch-${{ github.ref_name }}-macOS.zip`
             - **Windows**: `CC-Switch-${{ github.ref_name }}-Windows.msi` or `CC-Switch-${{ github.ref_name }}-Windows-Portable.zip`
             - **Linux (x86_64)**: `CC-Switch-${{ github.ref_name }}-Linux-x86_64.AppImage` / `.deb` / `.rpm`
 
             > `latest.json` and signed updater artifacts are published to this fork release feed.
+            >
+            > macOS build is intentionally unsigned and not notarized. Colleagues may need to open it once, then use `System Settings > Privacy & Security > Open Anyway`.
           files: release-assets/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -328,6 +402,8 @@ jobs:
           VERSION="${TAG#codefree-o-v}"
           PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           BASE_URL="https://github.com/$REPO/releases/download/$TAG"
+          MAC_URL=""
+          MAC_SIG=""
           WIN_URL=""
           WIN_SIG=""
           LINUX_URL=""
@@ -340,6 +416,10 @@ jobs:
             url="$BASE_URL/$fname"
             sig_content=$(cat "$sig")
             case "$fname" in
+              *-macOS.tar.gz)
+                MAC_URL="$url"
+                MAC_SIG="$sig_content"
+                ;;
               *-Windows.msi)
                 WIN_URL="$url"
                 WIN_SIG="$sig_content"
@@ -351,6 +431,10 @@ jobs:
             esac
           done
 
+          if [ -n "$MAC_URL" ] && [ -z "$MAC_SIG" ]; then
+            echo "Missing signed macOS updater artifact signature" >&2
+            exit 1
+          fi
           if [ -z "$WIN_URL" ] || [ -z "$WIN_SIG" ]; then
             echo "Missing signed Windows updater artifact" >&2
             exit 1
@@ -367,6 +451,19 @@ jobs:
             echo "  \"notes\": \"Release $TAG\","
             echo "  \"pub_date\": \"$PUB_DATE\","
             echo '  "platforms": {'
+            first=1
+            if [ -n "$MAC_URL" ] && [ -n "$MAC_SIG" ]; then
+              for key in darwin-aarch64 darwin-x86_64; do
+                if [ $first -eq 0 ]; then
+                  echo ','
+                fi
+                echo "    \"$key\": {\"signature\": \"$MAC_SIG\", \"url\": \"$MAC_URL\"}"
+                first=0
+              done
+            fi
+            if [ $first -eq 0 ]; then
+              echo ','
+            fi
             echo "    \"windows-x86_64\": {\"signature\": \"$WIN_SIG\", \"url\": \"$WIN_URL\"},"
             echo "    \"linux-x86_64\": {\"signature\": \"$LINUX_SIG\", \"url\": \"$LINUX_URL\"}"
             echo '  }'
