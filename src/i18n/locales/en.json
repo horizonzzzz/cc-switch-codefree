@@ -171,6 +171,10 @@
         "oauthHint": "Google official uses OAuth personal authentication, no need to fill in API Key. The browser will automatically open for login on first use.",
         "apiKeyPlaceholder": "Enter Gemini API Key"
       }
+    },
+    "codefreeO": {
+      "notSupported": "Provider Management Not Supported",
+      "notSupportedDescription": "This agent does not support provider management. The provider page is displayed for visual consistency with other agents only."
     }
   },
   "claudeCode": {

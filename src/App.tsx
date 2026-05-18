@@ -59,6 +59,7 @@ import {
 import { AppSwitcher } from "@/components/AppSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
+import { CodefreeOProviderPlaceholder } from "@/components/providers/CodefreeOProviderPlaceholder";
 import { EditProviderDialog } from "@/components/providers/EditProviderDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsPage } from "@/components/settings/SettingsPage";
@@ -976,6 +977,25 @@ function App() {
         case "openclawAgents":
           return <AgentsDefaultsPanel />;
         default:
+          if (activeApp === "codefree-o") {
+            return (
+              <div className="px-6 flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={activeApp}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <CodefreeOProviderPlaceholder />
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </div>
+            );
+          }
           return (
             <div className="px-6 flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="flex-1 overflow-y-auto overflow-x-hidden pb-12 px-1">
@@ -1553,13 +1573,15 @@ function App() {
                       </AnimatePresence>
                     </div>
 
-                    <Button
-                      onClick={() => setIsAddOpen(true)}
-                      size="icon"
-                      className={`ml-2 ${addActionButtonClass}`}
-                    >
-                      <Plus className="w-5 h-5" />
-                    </Button>
+                    {activeApp !== "codefree-o" && (
+                      <Button
+                        onClick={() => setIsAddOpen(true)}
+                        size="icon"
+                        className={`ml-2 ${addActionButtonClass}`}
+                      >
+                        <Plus className="w-5 h-5" />
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
