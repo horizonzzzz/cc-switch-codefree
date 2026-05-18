@@ -40,7 +40,7 @@ pub struct VisibleApps {
     pub gemini: bool,
     #[serde(default = "default_true")]
     pub opencode: bool,
-    #[serde(default)]
+    #[serde(rename = "codefree-o", alias = "codefreeO", default)]
     pub codefree_o: bool,
     #[serde(default = "default_true")]
     pub openclaw: bool,
