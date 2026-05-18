@@ -289,6 +289,13 @@ function App() {
     sharedFeatureApp === "openclaw" ||
     sharedFeatureApp === "gemini" ||
     sharedFeatureApp === "hermes";
+  const isCodefreeOProviderPlaceholder = activeApp === "codefree-o";
+  const supportsProviderProxyControls =
+    activeApp !== "opencode" &&
+    activeApp !== "openclaw" &&
+    activeApp !== "hermes" &&
+    !isCodefreeOProviderPlaceholder;
+  const supportsProviderCreation = !isCodefreeOProviderPlaceholder;
 
   const {
     addProvider,
@@ -1275,10 +1282,7 @@ function App() {
           </div>
 
           <div className="flex flex-1 min-w-0 items-center justify-end gap-1.5">
-            {currentView === "providers" &&
-              activeApp !== "opencode" &&
-              activeApp !== "openclaw" &&
-              activeApp !== "hermes" && (
+            {currentView === "providers" && supportsProviderProxyControls && (
                 <div
                   className="flex shrink-0 items-center gap-1.5"
                   style={{ WebkitAppRegion: "no-drag" } as any}
@@ -1573,7 +1577,7 @@ function App() {
                       </AnimatePresence>
                     </div>
 
-                    {activeApp !== "codefree-o" && (
+                    {supportsProviderCreation && (
                       <Button
                         onClick={() => setIsAddOpen(true)}
                         size="icon"

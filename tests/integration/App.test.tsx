@@ -8,6 +8,7 @@ import {
   setCurrentProviderId,
   setLiveProviderIds,
   setProviders,
+  setSettings,
 } from "../msw/state";
 import { emitTauriEvent } from "../msw/tauriMocks";
 
@@ -150,6 +151,24 @@ vi.mock("@/components/mcp/McpPanel", () => ({
     ) : (
       <button onClick={() => onOpenChange(true)}>open-mcp</button>
     ),
+}));
+
+vi.mock("@/components/proxy/ProxyToggle", () => ({
+  ProxyToggle: ({ activeApp }: { activeApp: string }) => (
+    <div data-testid={`proxy-toggle-${activeApp}`}>proxy-toggle</div>
+  ),
+}));
+
+vi.mock("@/components/proxy/FailoverToggle", () => ({
+  FailoverToggle: ({ activeApp }: { activeApp: string }) => (
+    <div data-testid={`failover-toggle-${activeApp}`}>failover-toggle</div>
+  ),
+}));
+
+vi.mock("@/components/providers/CodefreeOProviderPlaceholder", () => ({
+  CodefreeOProviderPlaceholder: () => (
+    <div data-testid="codefree-provider-placeholder">codefree-placeholder</div>
+  ),
 }));
 
 const renderApp = (AppComponent: ComponentType) => {
@@ -354,5 +373,40 @@ describe("App integration with MSW", () => {
       ),
     );
     expect(screen.queryByTestId("provider-list")).not.toBeInTheDocument();
+  }, 20000);
+
+  it("hides provider management toolbar controls on the codefree-o placeholder", async () => {
+    setSettings({
+      enableLocalProxy: true,
+      enableFailoverToggle: true,
+    });
+
+    const { default: App } = await import("@/App");
+    renderApp(App);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("provider-list").textContent).toContain(
+        "claude-1",
+      ),
+    );
+
+    fireEvent.click(screen.getByText("switch-codefree-o"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("codefree-provider-placeholder"),
+      ).toBeInTheDocument(),
+    );
+
+    expect(
+      screen.queryByTestId("proxy-toggle-codefree-o"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("failover-toggle-codefree-o"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTitle("mcp.title")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "confirm-add" }),
+    ).not.toBeInTheDocument();
   }, 20000);
 });
