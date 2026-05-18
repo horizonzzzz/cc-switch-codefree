@@ -25,7 +25,7 @@ const APP_CONFIG: Array<{
   { id: "codex", icon: "openai", nameKey: "apps.codex" },
   { id: "gemini", icon: "gemini", nameKey: "apps.gemini" },
   { id: "opencode", icon: "opencode", nameKey: "apps.opencode" },
-  { id: "codefree-o", icon: "opencode", nameKey: "apps.codefreeO" },
+  { id: "codefree-o", icon: "codefreeo", nameKey: "apps.codefreeO" },
   { id: "openclaw", icon: "openclaw", nameKey: "apps.openclaw" },
   { id: "hermes", icon: "hermes", nameKey: "apps.hermes" },
 ];

@@ -487,6 +487,13 @@ export const iconMetadata: Record<string, IconMetadata> = {
     keywords: ["stepfun", "step", "jieyue", "阶跃星辰"],
     defaultColor: "#005AFF",
   },
+  codefreeo: {
+    name: "codefreeo",
+    displayName: "CodeFree-O",
+    category: "ai-provider",
+    keywords: ["codefree-o", "codefree", "ai", "open"],
+    defaultColor: "#000000",
+  },
 };
 
 export function getIconMetadata(name: string): IconMetadata | undefined {

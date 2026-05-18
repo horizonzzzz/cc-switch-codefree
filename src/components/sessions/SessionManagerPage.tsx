@@ -651,7 +651,7 @@ export function SessionManagerPage({ appId }: { appId: string }) {
                             <SelectItem value="codefree-o">
                               <div className="flex items-center gap-2">
                                 <ProviderIcon
-                                  icon="opencode"
+                                  icon="codefreeo"
                                   name="codefree-o"
                                   size={14}
                                 />

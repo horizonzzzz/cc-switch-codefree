@@ -48,7 +48,7 @@ export function AppSwitcher({
     codex: "openai",
     gemini: "gemini",
     opencode: "opencode",
-    "codefree-o": "opencode",
+    "codefree-o": "codefreeo",
     openclaw: "openclaw",
     hermes: "hermes",
   };

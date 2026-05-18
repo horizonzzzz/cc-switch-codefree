@@ -98,7 +98,7 @@ export const APP_ICON_MAP: Record<AppId, AppConfig> = {
     label: "codefree-o",
     icon: (
       <ProviderIcon
-        icon="opencode"
+        icon="codefreeo"
         name="codefree-o"
         size={14}
         showFallback={false}
