@@ -32,6 +32,7 @@ export const SKILLS_APP_IDS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "codefree-o",
   "hermes",
 ];
 

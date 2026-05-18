@@ -95,6 +95,7 @@ impl Database {
             enabled_codex BOOLEAN NOT NULL DEFAULT 0,
             enabled_gemini BOOLEAN NOT NULL DEFAULT 0,
             enabled_opencode BOOLEAN NOT NULL DEFAULT 0,
+            enabled_codefree_o BOOLEAN NOT NULL DEFAULT 0,
             enabled_hermes BOOLEAN NOT NULL DEFAULT 0,
             installed_at INTEGER NOT NULL DEFAULT 0,
             content_hash TEXT,
@@ -339,6 +340,14 @@ impl Database {
             conn,
             "providers",
             "in_failover_queue",
+            "BOOLEAN NOT NULL DEFAULT 0",
+        )?;
+
+        // 为 skills 表添加 enabled_codefree_o 列（兼容已有数据库，不涨 SCHEMA_VERSION）
+        Self::add_column_if_missing(
+            conn,
+            "skills",
+            "enabled_codefree_o",
             "BOOLEAN NOT NULL DEFAULT 0",
         )?;
 

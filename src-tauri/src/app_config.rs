@@ -96,6 +96,8 @@ pub struct SkillApps {
     pub gemini: bool,
     #[serde(default)]
     pub opencode: bool,
+    #[serde(rename = "codefree-o", alias = "codefree_o", default)]
+    pub codefree_o: bool,
     #[serde(default)]
     pub hermes: bool,
 }
@@ -108,7 +110,7 @@ impl SkillApps {
             AppType::Codex => self.codex,
             AppType::Gemini => self.gemini,
             AppType::OpenCode => self.opencode,
-            AppType::CodefreeO => false, // codefree-o is MCP-only and does not support Skills
+            AppType::CodefreeO => self.codefree_o,
             AppType::Hermes => self.hermes,
             AppType::OpenClaw => false, // OpenClaw doesn't support Skills
             AppType::ClaudeDesktop => false,
@@ -122,7 +124,7 @@ impl SkillApps {
             AppType::Codex => self.codex = enabled,
             AppType::Gemini => self.gemini = enabled,
             AppType::OpenCode => self.opencode = enabled,
-            AppType::CodefreeO => {}, // codefree-o is MCP-only and does not support Skills
+            AppType::CodefreeO => self.codefree_o = enabled,
             AppType::Hermes => self.hermes = enabled,
             AppType::OpenClaw => {} // OpenClaw doesn't support Skills, ignore
             AppType::ClaudeDesktop => {} // Claude Desktop 3P profiles don't use CC Switch skill sync
@@ -144,6 +146,9 @@ impl SkillApps {
         if self.opencode {
             apps.push(AppType::OpenCode);
         }
+        if self.codefree_o {
+            apps.push(AppType::CodefreeO);
+        }
         if self.hermes {
             apps.push(AppType::Hermes);
         }
@@ -152,7 +157,7 @@ impl SkillApps {
 
     /// 检查是否所有应用都未启用
     pub fn is_empty(&self) -> bool {
-        !self.claude && !self.codex && !self.gemini && !self.opencode && !self.hermes
+        !self.claude && !self.codex && !self.gemini && !self.opencode && !self.codefree_o && !self.hermes
     }
 
     /// 仅启用指定应用（其他应用设为禁用）

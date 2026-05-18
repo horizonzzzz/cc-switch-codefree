@@ -68,6 +68,7 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({
 
   // 内联 SVG 渲染（支持 CSS currentColor 着色）
   if (iconSvg) {
+    const cleanedSvg = iconSvg.replace(/<title>[^<]*<\/title>/gi, '');
     return (
       <span
         className={cn(
@@ -76,7 +77,7 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({
         )}
         title={name}
         style={{ ...sizeStyle, color: effectiveColor }}
-        dangerouslySetInnerHTML={{ __html: iconSvg }}
+        dangerouslySetInnerHTML={{ __html: cleanedSvg }}
       />
     );
   }
