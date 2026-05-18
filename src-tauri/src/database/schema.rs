@@ -432,11 +432,6 @@ impl Database {
                         Self::migrate_v9_to_v10(conn)?;
                         Self::set_user_version(conn, 10)?;
                     }
-                    10 => {
-                        log::info!("迁移数据库从 v10 到 v11（添加 codefree-o MCP 支持）");
-                        Self::migrate_v10_to_v11(conn)?;
-                        Self::set_user_version(conn, 11)?;
-                    }
                     _ => {
                         return Err(AppError::Database(format!(
                             "未知的数据库版本 {version}，无法迁移到 {SCHEMA_VERSION}"
@@ -1183,12 +1178,18 @@ impl Database {
         Ok(())
     }
 
-    /// v9 -> v10 迁移：添加 Hermes Agent 支持
+    /// v9 -> v10 迁移：添加 Hermes Agent + codefree-o MCP 支持
     fn migrate_v9_to_v10(conn: &Connection) -> Result<(), AppError> {
         Self::add_column_if_missing(
             conn,
             "mcp_servers",
             "enabled_hermes",
+            "BOOLEAN NOT NULL DEFAULT 0",
+        )?;
+        Self::add_column_if_missing(
+            conn,
+            "mcp_servers",
+            "enabled_codefree_o",
             "BOOLEAN NOT NULL DEFAULT 0",
         )?;
 
@@ -1202,20 +1203,7 @@ impl Database {
             )?;
         }
 
-        log::info!("v9 -> v10 迁移完成：已添加 Hermes Agent 支持");
-        Ok(())
-    }
-
-    /// v10 -> v11 迁移：添加 codefree-o MCP 支持
-    fn migrate_v10_to_v11(conn: &Connection) -> Result<(), AppError> {
-        Self::add_column_if_missing(
-            conn,
-            "mcp_servers",
-            "enabled_codefree_o",
-            "BOOLEAN NOT NULL DEFAULT 0",
-        )?;
-
-        log::info!("v10 -> v11 迁移完成：已添加 codefree-o MCP 支持");
+        log::info!("v9 -> v10 迁移完成：已添加 Hermes Agent + codefree-o MCP 支持");
         Ok(())
     }
 
