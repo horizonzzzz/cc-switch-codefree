@@ -107,7 +107,11 @@ pub fn sync_claude_session_logs(db: &Database) -> Result<SessionSyncResult, AppE
     Ok(result)
 }
 
-/// 收集目录下所有 .jsonl 文件
+/// 收集目录下所有 .jsonl 文件（含子 agent 文件）
+///
+/// 扫描三层固定深度，不使用递归，避免死循环：
+///   projects_dir/项目目录/*.jsonl                          (主会话)
+///   projects_dir/项目目录/SESSION_ID/subagents/*.jsonl      (子 agent)
 fn collect_jsonl_files(projects_dir: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
 
@@ -126,7 +130,22 @@ fn collect_jsonl_files(projects_dir: &Path) -> Vec<PathBuf> {
             for sub_entry in sub_entries.flatten() {
                 let sub_path = sub_entry.path();
                 if sub_path.extension().and_then(|e| e.to_str()) == Some("jsonl") {
+                    // 主会话 JSONL 文件
                     files.push(sub_path);
+                } else if sub_path.is_dir() {
+                    // 扫描子 agent 目录: 项目/SESSION_ID/subagents/*.jsonl
+                    let subagents_dir = sub_path.join("subagents");
+                    if subagents_dir.is_dir() {
+                        if let Ok(agent_entries) = fs::read_dir(&subagents_dir) {
+                            for agent_entry in agent_entries.flatten() {
+                                let agent_path = agent_entry.path();
+                                if agent_path.extension().and_then(|e| e.to_str()) == Some("jsonl")
+                                {
+                                    files.push(agent_path);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -422,42 +441,48 @@ fn insert_session_log_entry(
         ),
     };
 
-    conn.execute(
-        "INSERT OR IGNORE INTO proxy_request_logs (
+    let inserted_rows = conn
+        .execute(
+            "INSERT OR IGNORE INTO proxy_request_logs (
             request_id, provider_id, app_type, model, request_model,
             input_tokens, output_tokens, cache_read_tokens, cache_creation_tokens,
             input_cost_usd, output_cost_usd, cache_read_cost_usd, cache_creation_cost_usd, total_cost_usd,
             latency_ms, first_token_ms, status_code, error_message, session_id,
             provider_type, is_streaming, cost_multiplier, created_at, data_source
         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24)",
-        rusqlite::params![
-            request_id,
-            "_session",         // provider_id: 标记为会话来源
-            "claude",           // app_type
-            msg.model,
-            msg.model,          // request_model = model
-            msg.input_tokens,
-            msg.output_tokens,
-            msg.cache_read_tokens,
-            msg.cache_creation_tokens,
-            input_cost,
-            output_cost,
-            cache_read_cost,
-            cache_creation_cost,
-            total_cost,
-            0i64,               // latency_ms: 会话日志无此数据
-            Option::<i64>::None, // first_token_ms
-            200i64,             // status_code: 有 stop_reason 说明请求成功
-            Option::<String>::None, // error_message
-            msg.session_id,
-            Some("session_log"), // provider_type
-            1i64,               // is_streaming: Claude Code 通常使用流式
-            "1.0",              // cost_multiplier
-            created_at,
-            "session_log",      // data_source
-        ],
-    )
-    .map_err(|e| AppError::Database(format!("插入会话日志失败: {e}")))?;
+            rusqlite::params![
+                request_id,
+                "_session",         // provider_id: 标记为会话来源
+                "claude",           // app_type
+                msg.model,
+                msg.model,          // request_model = model
+                msg.input_tokens,
+                msg.output_tokens,
+                msg.cache_read_tokens,
+                msg.cache_creation_tokens,
+                input_cost,
+                output_cost,
+                cache_read_cost,
+                cache_creation_cost,
+                total_cost,
+                0i64,               // latency_ms: 会话日志无此数据
+                Option::<i64>::None, // first_token_ms
+                200i64,             // status_code: 有 stop_reason 说明请求成功
+                Option::<String>::None, // error_message
+                msg.session_id,
+                Some("session_log"), // provider_type
+                1i64,               // is_streaming: Claude Code 通常使用流式
+                "1.0",              // cost_multiplier
+                created_at,
+                "session_log",      // data_source
+            ],
+        )
+        .map_err(|e| AppError::Database(format!("插入会话日志失败: {e}")))?;
+
+    // 仅在确实写入新行时通知前端，避免 INSERT OR IGNORE 跳过时产生空刷新
+    if inserted_rows > 0 {
+        crate::usage_events::notify_log_recorded();
+    }
 
     Ok(true)
 }
@@ -636,5 +661,28 @@ mod tests {
         assert_eq!(count, 1);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_collect_jsonl_files_includes_subagents() {
+        let tmp = std::env::temp_dir().join(format!("cc-switch-test-{}", uuid::Uuid::new_v4()));
+        let project = tmp.join("project");
+        let session_dir = project.join("test-session");
+        let subagents_dir = session_dir.join("subagents");
+        fs::create_dir_all(&subagents_dir).unwrap();
+
+        fs::write(project.join("main.jsonl"), "{}").unwrap();
+        fs::write(subagents_dir.join("agent-abc.jsonl"), "{}").unwrap();
+
+        let files = collect_jsonl_files(&tmp);
+        assert_eq!(files.len(), 2);
+        let paths: Vec<String> = files
+            .iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect();
+        assert!(paths.iter().any(|p| p.contains("main.jsonl")));
+        assert!(paths.iter().any(|p| p.contains("agent-abc.jsonl")));
+
+        fs::remove_dir_all(&tmp).ok();
     }
 }
