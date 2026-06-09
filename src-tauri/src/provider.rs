@@ -185,6 +185,9 @@ impl Provider {
                     str_at(options.and_then(|o| o.get("apiKey"))),
                 )
             }
+            // codefree-o is currently MCP-only inside CC Switch; it has no
+            // provider credential shape for native usage queries.
+            AppType::CodefreeO => (String::new(), String::new()),
             // Claude and Claude Desktop both use the Anthropic-style env map, keeping
             // the OpenRouter/Google key fallbacks the JS-script path relies on.
             // Listed explicitly (not `_`) so a new AppType fails to compile here.
@@ -1401,6 +1404,20 @@ mod tests {
                 "https://api.deepseek.com/v1".to_string(),
                 "sk-opencode".to_string()
             )
+        );
+    }
+
+    #[test]
+    fn resolve_credentials_codefree_o_is_mcp_only() {
+        let p = provider_with(json!({
+            "env": {
+                "ANTHROPIC_BASE_URL": "https://api.example.com",
+                "ANTHROPIC_AUTH_TOKEN": "sk-codefree",
+            }
+        }));
+        assert_eq!(
+            p.resolve_usage_credentials(&AppType::CodefreeO),
+            (String::new(), String::new())
         );
     }
 
